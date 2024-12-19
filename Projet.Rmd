@@ -1,38 +1,48 @@
-```{r}
-#install.packages(tidyverse)
-library(tidyverse)
-```
-```{r}
 
-glimpse(Dog_Breads_Around_The_World)
-```
-```{r}
+#Noms des coéquipières`
+
+Mélodie Lafrenière
+Gabrielle Larose
+Noémie Vallée
+
+#Introduction
+
 La question de recherche de ce projet est la suivante : Quelles sont les caractéristiques les plus importantes des différentes races de chiens et comment ces caractéristiques peuvent affecter la popularité et l’adaptabilité de l’animal dans certains contextes spécifiques ? L'objectif de cette analyse est d’aider la population à se renseigner quant aux particularités entourant chaque race de chien et à prendre des décisions éclairées lors de l’adoption.
 
-Pour l’analyse de nos données, on souhaite établir la relation entre les différentes caractéristiques des races, par exemple, la taille. On s’attend à observer une popularité plus importante auprès des races qui présentent des comportements adaptés aux multiples contextes, par exemple, la cohabitation avec les enfants. De plus, on pose comme hypothèse que les races ayant des besoins médicaux moindres sont plus en demande. 
+Pour l’analyse de nos données, on souhaite établir la relation entre les différentes caractéristiques des races, par exemple, la taille et l'intelligence. Par exemple, On s'attend à ce que les chiens ayant un "Friendly Rating" plus élevé soit meilleurs avec les enfants, ce qui conviendrait aux familles. On pose aussi comme hypothèse que les chiens ayant une plus grande taille ont une espérance de vie moins élevée, une information que les gens devraient savoir.
 
-renommer les données
+#Chargement des packages
 
-régression (taille vs esperance de vie)
-
-sous-catégorie (race vs origine vs ?)
-```
-
-
-
-
+Pour ce projet, nous aurons besoin des packages tidyverse et tidymodels.
 
 ```{r}
-file_path <- file.choose()
+
+library(tidyverse)
+library(tidymodels)
+library(infer)
+
+```
+#Données
+
+Pour ce projet, nous utiliserons les données du dataset "Dog Breads Around The World", que nous nommerons "Dog_data".
+
+```{r}
+
+Dog_data <- read_csv("Dog Breads Around The World.csv")
 
 ```
 ```{r}
-Dog_data <- read_csv(file_path)
+
+View(Dog_data)
+
 ```
 
--> Renommer les variables
+#Renommer les variables
+
+Étant donné que les noms de nos variables contiennent des espaces ou d'autres caractères pouvant nuire au codage, nous devons les renommer.
 
 ```{r}
+
 Dog_data <- Dog_data %>%
   rename(
     unique_trait = `Unique Feature`,  
@@ -46,19 +56,22 @@ Dog_data <- Dog_data %>%
     Health_Issues_Risk = `Health Issues Risk`, 
     Average_Weight = `Average Weight (kg)`, 
     Training_Difficulty = `Training Difficulty (1-10)`
+    )
 
-
-
-
-
-  )
 ```
+
+
+régression (poids vs esperance de vie)
+
+sous-catégorie (race vs origine vs ?)
 
 -> faire des sous-catégories
 
 ```{r}
-Dog_data <- Dog_data%>%
-  mutate(Life_Span_catégory = case_when(Life_Span >= 7 & Life_Span <= 10 ~ "courte", Life_Span >= 10 & Life_Span <= 13 ~ "moyenne", Life_Span > 13 ~ "longue"))
+
+Dog_data <- Dog_data %>%
+  mutate(Life_Span_category = case_when(Life_Span >= 7 & Life_Span <= 10 ~ "courte", Life_Span >= 10 & Life_Span <= 13 ~ "moyenne", Life_Span > 13 ~ "longue"))
+
 ```
 
 ```{r}
@@ -71,6 +84,14 @@ Dog_data <- Dog_data%>%
 Dog_data <- Dog_data%>%
   mutate(Daily_Exercise_Needs_category = case_when(Daily_Exercise_Needs <= 1.20 ~ "low", Daily_Exercise_Needs >= 1.40 & Daily_Exercise_Needs <= 2.20 ~ "moderate", Daily_Exercise_Needs >= 2.40 ~ "high"))
 ```
+
+```{r}
+
+Dog_data <- Dog_data %>%
+  mutate(Intelligence_Rating_category = case_when(Intelligence_Rating <= 6 ~ "Low", Intelligence_Rating >= 7 & Intelligence_Rating <= 8 ~ "Moderate", Intelligence_Rating >= 9 ~ "High"))
+
+```
+
 
 - quelles races de chiens sont idéales pour les familles 
 --> relation entre Friendly Rating et Good with children
@@ -92,4 +113,86 @@ Dog_data %>%
 
 ```
 
-test
+#Classification
+
+
+#Régression
+
+Afin de déterminer s'il y a un lien entre le poids moyen et l'espérance de vie, nous effectuons une régression linéaire.
+
+```{r}
+
+Dog_split <- initial_split(Dog_data)
+
+Dog_train <- training(Dog_split)
+
+Dog_test <- testing(Dog_split)
+
+```
+
+```{r}
+
+Dog_reg <- linear_reg() %>%
+  set_engine("lm")
+
+Dog_fit <- Dog_reg %>%
+  fit(Life_Span ~ as.numeric(Average_Weight), Dog_train)
+
+glance(Dog_fit)
+
+Dog_pred <- 
+  predict(Dog_fit, Dog_test) %>% 
+  bind_cols(predict(Dog_fit, Dog_test)) %>% 
+  bind_cols(Dog_test %>% 
+              select(Average_Weight))
+
+Dog_pred %>%
+  ggplot(aes(x = Average_Weight, y = .pred...1)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "Espérance de vie prédite selon le poids",
+       x = "Poids",
+       y = "Espérance de vie")
+
+```
+R^2 environ de 0,6, un petit lien, quoi faire avec les prédictions?
+
+
+#Test d'hypothèse
+
+Afin de déterminer s'il y a une dépendance entre l'intelligence et la difficulté d'entrainement, nous procédons à un test d'hypothèse. Nous utiliserons un niveau de signification de 0,05.
+
+Hypothèse nulle: Les moyennes de difficulté d'entrainement sont égales et il n'y a donc pas de lien entre cette dernière et l'intelligence.
+
+Hypothèse alternative: Au moins une des moyennes diffère et il y a donc un lien entre l'intelligence et la difficulté d'entrainement.
+`
+```{r}
+
+observed_f_statistic <- Dog_data %>%
+  specify(Training_Difficulty ~ Intelligence_Rating_category) %>%
+  hypothesize(null = "independence") %>%
+  calculate(stat = "F")
+
+null_dist_anova <- Dog_data %>%
+  specify(Training_Difficulty ~ Intelligence_Rating_category) %>%
+  hypothesize(null = "independence") %>%
+  generate(reps = 1000, type = "permute") %>%
+  calculate(stat = "F")
+
+null_dist_anova %>%
+  visualize() + 
+  shade_p_value(observed_f_statistic,
+                direction = "greater")
+
+p_value <- null_dist_anova %>%
+  get_p_value(obs_stat = observed_f_statistic,
+              direction = "greater")
+
+p_value
+
+```
+Nous obtenons finalement une valeur p de 0,004, ce qui est plus petit que 0,05. Cela signifie que nous devons rejeter l'hypothèse nulle. On constate alors qu'au moins une des moyennes diffère. Par conséquent, il y a effectivement un lien entre l'intelligence et la difficulté d'entrainement.
+
+Lors de l'adoption de son toutou, une personne devrait donc considérer à quel point elle veut entrainer celui-ci. Si elle souhaite en faire, par exemple, un chien de compétition, il serait préférable d'opter pour un ayant un niveau d'intelligence plus élevé afin de faciliter son entrainement et de gagner du temps. Toutefois, si cette personne a beaucoup de patience et de temps, elle peut toujours en adopter un avec un niveau moins élevé. Il est aussi important de considérer que si elle ne planifie pas l'entrainer du tout, alors l'intelligence n'aura pas une grande importance et elle pourra se fier à d'autres critères avant de procéder.
+
+#Conclusion
