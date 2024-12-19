@@ -1,0 +1,93 @@
+```{r}
+#install.packages(tidyverse)
+library(tidyverse)
+```
+```{r}
+
+glimpse(Dog_Breads_Around_The_World)
+```
+```{r}
+La question de recherche de ce projet est la suivante : Quelles sont les caractéristiques les plus importantes des différentes races de chiens et comment ces caractéristiques peuvent affecter la popularité et l’adaptabilité de l’animal dans certains contextes spécifiques ? L'objectif de cette analyse est d’aider la population à se renseigner quant aux particularités entourant chaque race de chien et à prendre des décisions éclairées lors de l’adoption.
+
+Pour l’analyse de nos données, on souhaite établir la relation entre les différentes caractéristiques des races, par exemple, la taille. On s’attend à observer une popularité plus importante auprès des races qui présentent des comportements adaptés aux multiples contextes, par exemple, la cohabitation avec les enfants. De plus, on pose comme hypothèse que les races ayant des besoins médicaux moindres sont plus en demande. 
+
+renommer les données
+
+régression (taille vs esperance de vie)
+
+sous-catégorie (race vs origine vs ?)
+```
+
+
+
+
+
+```{r}
+file_path <- file.choose()
+
+```
+```{r}
+Dog_data <- read_csv(file_path)
+```
+
+-> Renommer les variables
+
+```{r}
+Dog_data <- Dog_data %>%
+  rename(
+    unique_trait = `Unique Feature`,  
+    Friendly_Rating  = `Friendly Rating (1-10)` ,    
+    Life_Span = `Life Span`, 
+    Grooming_Needs = `Grooming Needs`, 
+    Daily_Exercise_Needs = `Exercise Requirements (hrs/day)`, 
+    Good_with_Children = `Good with Children`, 
+    Intelligence_Rating = `Intelligence Rating (1-10)`, 
+    Shedding_Level = `Shedding Level`, 
+    Health_Issues_Risk = `Health Issues Risk`, 
+    Average_Weight = `Average Weight (kg)`, 
+    Training_Difficulty = `Training Difficulty (1-10)`
+
+
+
+
+
+  )
+```
+
+-> faire des sous-catégories
+
+```{r}
+Dog_data <- Dog_data%>%
+  mutate(Life_Span_catégory = case_when(Life_Span >= 7 & Life_Span <= 10 ~ "courte", Life_Span >= 10 & Life_Span <= 13 ~ "moyenne", Life_Span > 13 ~ "longue"))
+```
+
+```{r}
+Dog_data <- Dog_data%>%
+  mutate(Friendly_Rating_category = case_when(Friendly_Rating >= 5 & Friendly_Rating <= 6 ~ "low", Friendly_Rating >= 7 & Friendly_Rating <= 8 ~ "moderate", Friendly_Rating >= 9 & Friendly_Rating <= 10 ~ "high"))
+```
+
+
+```{r}
+Dog_data <- Dog_data%>%
+  mutate(Daily_Exercise_Needs_category = case_when(Daily_Exercise_Needs <= 1.20 ~ "low", Daily_Exercise_Needs >= 1.40 & Daily_Exercise_Needs <= 2.20 ~ "moderate", Daily_Exercise_Needs >= 2.40 ~ "high"))
+```
+
+- quelles races de chiens sont idéales pour les familles 
+--> relation entre Friendly Rating et Good with children
+```{r}
+ggplot(data = Dog_data, mapping = aes(x = Friendly_Rating_category, y = Good_with_Children)) +
+  geom_jitter(alpha = 0.5, color = "purple") + 
+  labs(x = "Friendly Rating", y = "Good with children")
+
+```
+--> montre que les chien high & moderate friendly sont + good with children et les chiens les moins friendly (low) sont moins good with children. Donc, pour une famille avec enfants, les caractéristiques friendly rating & good with children sont importantes à prendre en compte pour faire le meilleur choix de chiens. Alors, voici le top 15 des chiens les + friendly et good with children placé en ordre décroissant
+
+
+```{r}
+Dog_data %>%
+  arrange(desc(Friendly_Rating), desc(Good_with_Children)) %>%
+  select(Name, Friendly_Rating_category, Good_with_Children) %>%
+  head(15)
+
+
+```
