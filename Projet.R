@@ -1,0 +1,273 @@
+#Noms des coéquipières
+
+Mélodie Lafrenière
+Gabrielle Larose
+Noémie Vallée
+
+#Introduction
+
+La question de recherche de ce projet est la suivante : Quelles sont les caractéristiques les plus importantes des différentes races de chiens et comment ces caractéristiques peuvent affecter l’adaptabilité de l’animal dans certains contextes spécifiques ? L'objectif de cette analyse est d’aider la population à se renseigner quant aux particularités entourant chaque race de chien et à prendre des décisions éclairées lors de l’adoption.
+
+Pour l’analyse de nos données, on souhaite établir la relation entre les différentes caractéristiques des races, par exemple, la taille et l'intelligence, mais aussi catégoriser ces races afin de déterminer laquelle est la meilleure pour telle personne selon son mode de vie et préférences. Nous jugeons que les chiens ayant besoin de plus d'exercice et qui requièrent plus de soins devraient avoir un propriétaire ayant beaucoup de temps pour gérer tout cela. Nous allons donc déterminer quels sont les types qui ont besoin de ce temps. De plus, on s'attend à ce que les chiens ayant un indice amical plus élevé soient meilleurs avec les enfants, ce qui conviendrait aux familles. On pose aussi comme hypothèse que les chiens ayant une plus grande taille ont une espérance de vie moins élevée, une information que les gens devraient savoir. Finalement, on croit qu'il y a une dépendance entre le niveau d'intelligence du chien et la difficulté à l'entrainer.
+
+#Présentation des données
+
+Pour ce faire, nous utiliserons le dataset "Dog_Breads_Around_The_World" que nous renommerons "Dog_data" pour faire plus court. Il contient les 15 variables suivantes: Name, Origin, Type, Unique Feature, Friendly Rating (1-10), Life Span, Size, Grooming Needs, Exercise Requirements (hrs/day), Good With Children, Intelligence Rating (1-10), Shedding Level, Health Issues Risk, Average Weight (kg) et Training Difficulty (1-10). Elles représentent respectivement la race, l'origine, le type de chien, une caractéristique qui le rend unique, l'indice amical, l'espérance de vie, la taille, les soins requis, le temps d'exercice requis, la capacité à être bon avec les enfants, l'indice d'intelligence, le niveau de la mue, les risques d'avoir des problèmes de santé, le poids moyen et la difficulté à entrainer.
+
+#Chargement des packages
+
+Pour ce projet, nous aurons besoin des packages tidyverse, tidymodels, infer et broom.
+```{r}
+
+library(tidyverse)
+library(tidymodels)
+library(infer)
+library(broom)
+
+```
+
+#Chargement des données
+
+```{r}
+
+Dog_data <- read_csv("Dog Breads Around The World.csv")
+
+```
+```{r}
+
+Dog_data <- Dog_Breads_Around_The_World
+
+```
+```{r}
+
+View(Dog_data)
+
+```
+#Renommer les variables
+
+Étant donné que les noms de nos variables contiennent des espaces ou d'autres caractères pouvant nuire au codage, nous devons les renommer.
+```{r}
+
+Dog_data <- Dog_data %>%
+  rename(
+    unique_trait = `Unique Feature`,  
+    Friendly_Rating  = `Friendly Rating (1-10)` ,    
+    Life_Span = `Life Span`, 
+    Grooming_Needs = `Grooming Needs`, 
+    Daily_Exercise_Needs = `Exercise Requirements (hrs/day)`, 
+    Good_with_Children = `Good with Children`, 
+    Intelligence_Rating = `Intelligence Rating (1-10)`, 
+    Shedding_Level = `Shedding Level`, 
+    Health_Issues_Risk = `Health Issues Risk`, 
+    Average_Weight = `Average Weight (kg)`, 
+    Training_Difficulty = `Training Difficulty (1-10)`
+    )
+
+```
+
+Maintenant que les variables sont renommées, on peut créer des sous-catégories pour faciliter la compréhension.
+
+Ainsi, nous allons diviser le Life_Span (la durée de vie) en trois catégories. 
+
+Si la durée de vie est plus petite (<) que 10 ans, on la définie comme "courte". 
+Si elle est plus grande ou égale (>=) à 10 et plus petite ou égale (<=) à 13, alors entre 10 et 13 ans inclusivement, on la définie comme "moyenne". 
+Si elle est plus grande (>) que 13, on la définie comme "longue".
+
+```{r}
+
+Dog_data <- Dog_data %>%
+  mutate(Life_Span_category = case_when(Life_Span < 10 ~ "Courte", Life_Span >= 10 & Life_Span <= 13 ~ "Moyenne", Life_Span > 13 ~ "Longue"))
+
+```
+
+Pour le Friendly_Rating (l'indice amical), on le divise aussi en trois catégories. 
+
+Si, sur l'échelle de 10, l'indice amical est 5 ou 6 inclusivement, on dit que l'indice est "low". 
+Si, sur l'échelle de 10, l'indice est 7 ou 8 inclusivement, on dit que l'indice est "moderate". 
+Si, sur l'échelle de 10, l'indice est de 9 ou 10 inclusivement, on dit que l'indice est "high".
+
+```{r}
+
+Dog_data <- Dog_data%>%
+  mutate(Friendly_Rating_category = case_when(Friendly_Rating >= 5 & Friendly_Rating <= 6 ~ "Low", Friendly_Rating >= 7 & Friendly_Rating <= 8 ~ "Moderate", Friendly_Rating >= 9 & Friendly_Rating <= 10 ~ "High"))
+
+```
+
+Pour le Daily_Exercise_Needs (le besoin en activité physique quotidien), on le divise en trois catégories. 
+
+Si le chien a besoin d'une heure ou moins (<=) d'activité physique par jour, on dit que son besoin est "low".
+Si le chien à besoin de plus (>) d'une heure jusqu'à (<=) deux heures d'activité physique par jour, on dit que son besoin est "moderate".
+Si le chien à besoin de plus de (>) deux heures d'activité physique par jour, on dit que son besoin est "high".
+
+```{r}
+
+Dog_data <- Dog_data %>%
+  mutate(Daily_Exercise_Needs_category = case_when(Daily_Exercise_Needs <= 1.0 ~ "Low", Daily_Exercise_Needs > 1.0 & Daily_Exercise_Needs <= 2.0 ~ "Moderate", Daily_Exercise_Needs > 2.0 ~ "High"))
+
+```
+
+Pour le Intelligence_Rating (l'indice d'intelligence), on le divise en trois catégories.
+
+Si, sur l'échelle de 10, son indice d'intelligence est plus petite ou égale (<=) à 6, on dit que son indice est "low".
+Si, sur l'échelle de 10, son indice d'intelligence est entre 7 et 8 inclusivement, on dit que son indice est "moderate".
+Si, sur l'échelle de 10, son indice d'intelligence est plus grande ou égale (>=) à 9, on dit que son indice est "high".
+
+```{r}
+
+Dog_data <- Dog_data %>%
+  mutate(Intelligence_Rating_category = case_when(Intelligence_Rating <= 6 ~ "Low", Intelligence_Rating >= 7 & Intelligence_Rating <= 8 ~ "Moderate", Intelligence_Rating >= 9 ~ "High"))
+
+```
+
+#Quels types de chien requièrent plus de temps?
+
+Afin de déterminer quels types de chien requièrent plus de temps, nous allons créer un graphique en bar dans lequel nous incluerons les variables "Grooming_Needs", "Daily_Exercise_Needs_category", "Size" et "Type". Afin de visualiser le tout, nous utiliserons un facet_wrap.
+
+
+```{r}
+
+ggplot(data = Dog_data, mapping = aes(x = Daily_Exercise_Needs_category, y = Grooming_Needs, fill = Type, colour = Type)) + geom_point(size = 3) + facet_wrap(~Size) +
+  labs(title = "Besoins en exercice et toilettage selon la taille et le type de chien", x = "Besoin en exercice", y = "Besoin en toilettage")
+
+```
+En observant notre visualisation, on remarque que les chiens de troupeaux ont généralement besoin de beaucoup de toilettage et d'exercice en grande quantité. Les chiens de chasse, eux, ont besoin d'être peu toilettés à modérément, tout comme leur quantité d'exercice. Pour ce qui est des chiens non-sportifs, terrier et standards, leur temps de toilettage varie énormément et ils ont besoin d'exercice en quantité faible à modérée, mais surtout modérée pour ceux de type standard et terrier. Quant aux chiens sportifs, ils ont généralement besoin d'une grande quantité de toilettage et une quantité modérée à élevée d'exercice. Le besoin en toilettage des "toy dogs" varie aussi beaucoup, mais ils ont besoin de peu d'exercice. Finalement, les chiens de travail ont besoin d'un temps d'exercice généralement modéré et d'une quantité de soins faible à élevée.
+
+On constate donc que les chiens de troupeaux sont souvent ceux qui demandent le plus de temps. On recommanderait donc ces types de toutou à ceux qui ont beaucoup de temps sur les épaules et qui travaillent potentiellement depuis leur chez-soi. Les "toy dogs" semblent être ceux qui ont besoin de moins de temps, donc pour quelqu'un qui manque de temps, mais qui souhaite avoir un compagnon fidèle, il pourrait opter pour l'une de ces races. Bien évidemment, il faut quand même avoir un minimum de temps à leur consacrer puisqu'ils ont quand même certains besoins.
+
+#Quelles races de chien sont idéales pour les familles?
+
+Pour mettre en évidence les races de chiens qui conviennent le mieux aux familles, nous avons créé un graphique démontrant la relation entre la variable Friendly Rating et Good with children.
+
+```{r}
+
+ggplot(data = Dog_data, mapping = aes(x = Friendly_Rating_category, y = Good_with_Children)) +
+  geom_jitter(alpha = 0.5, color = "purple") + 
+  labs(x = "Friendly Rating", y = "Good with children")
+
+```
+On voit que la plupart des points sont concentrés au-dessus du niveau "Moderate" concernant l'indice amical et à côté de "Yes" concernant la faculté à être bon avec les enfants. On remarque aussi que beaucoup ayant un indice amical élevé sont bons avec les jeunes. Cependant, les chiens ayant un indice amical bas semblent être moins bons avec eux. Le graphique ci-haut montre donc que les chiens qui sont moyennement et très amicaux (Friendly_Rating "High" & "Moderate") sont meilleurs avec les enfants (Good_With_Children) et les chiens les moins amicaux (Friendly_Rating "low") sont moins, ou même pas du tout bons avec ceux-ci. (Good_With_Children).
+
+Donc, pour une famille avec enfants, les caractéristiques Friendly_Rating & Good_With_Children sont importantes à prendre en compte pour faire le meilleur choix de chiens. Une famille ayant de jeunes enfants devraient opter pour un toutou ayant un indice amical plus élevé afin que les jeunes soient en sécurité.
+
+Ainsi, voici le top 30 des chiens les plus amicaux et bons avec les enfants placés en ordre décroissant, donc du meilleur au moins bon.
+
+```{r}
+
+Dog_data %>%
+  arrange(desc(Friendly_Rating), desc(Good_with_Children)) %>%
+  select(Name, Friendly_Rating_category, Good_with_Children, unique_trait) %>%
+  head(30)
+
+```
+
+Des parents avec des jeunes enfants ou qui aiment être en contact avec des familles devraient se tourner vers ces races de chiens. Les plus haut classés ont les meilleurs caractéristiques. Nous avons mis 30 choix pour laisser la chance aux gens de se baser également sur leurs autres goûts personnels. C'est pourquoi nous avons ajouté une caractéristique unique de chaque race dans cette liste.
+
+#Régression
+
+Afin de déterminer s'il y a un lien entre le poids moyen et l'espérance de vie, nous effectuons une régression linéaire.
+
+```{r}
+
+Dog_split <- initial_split(Dog_data)
+
+Dog_train <- training(Dog_split)
+
+Dog_test <- testing(Dog_split)
+
+```
+
+```{r}
+
+Dog_reg <- linear_reg() %>%
+  set_engine("lm")
+
+Dog_fit <- Dog_reg %>%
+  fit(Life_Span ~ as.numeric(Average_Weight), Dog_train)
+
+Dog_test$Average_Weight <- as.numeric(as.character(Dog_test$Average_Weight))
+
+glance(Dog_fit)
+
+Dog_pred <- 
+  predict(Dog_fit, Dog_test) %>% 
+  bind_cols(predict(Dog_fit, Dog_test)) %>% 
+  bind_cols(Dog_test %>% 
+              select(Average_Weight))
+
+Dog_pred %>%
+  ggplot(aes(x = Average_Weight, y = .pred...1)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "Espérance de vie prédite selon le poids",
+       x = "Poids",
+       y = "Espérance de vie")
+
+```
+
+Comme on s'y attendait, le poids a bel et bien une influence sur l'espérance de vie du chien. En effet, on voit que les deux variables sont inversement dépendantes, c'est-à-dire que si les valeurs d'une variable augmentent, les valeurs de l'autre diminuent. 
+
+Voilà donc, plus le poids du chien est élevé (gros chien lourd), moins son espérance de vie est longue.
+
+Ainsi, si quelqu'un recherche un chien pour un maximum d'une dizaine d'années (plus ou moins), il n'y aurait aucun problème à adopter un gros chien. Cependant, si la personne souhaite garder son animal le plus longtemps possible, il faut être averti de choisir un plus petit chien. 
+
+```{r}
+model_summary <- tidy(Dog_fit)
+print(model_summary)
+```
+Source : https://modelsummary.com/
+
+Ici, on peut déduire que l'équation de la pente est y = -0,075x + 13.68. Maintenant, il est simple et facile lorsqu'on connait le poid d'estimer l'espérance de vie. Assez pratique quand les chiens ont atteint leur poids stable. Par exemple, un chien de 1 kg aurait une espérance de vie d'environ 13,068 ans.
+
+Calculons le R carré pour se prononcer sur la précision de la régression.
+```{r}
+
+model_metrics <- glance(Dog_fit)
+print(model_metrics)
+
+```
+
+Le R carré ici est de 0,59. Comme un cherche un coefficient R^2 qui se rapproche le plus possible de 1, on considère que la relation proportionnelle entre les deux variables (le poids et l'espérance de vie) ne suit pas le sens des proportionnalités dans certains cas. On pourrait dire que dans 59% des cas, les deux variables sont proportionnelles et qu'elle ne le sont pas dans 41% des cas. Il serait donc bien de trouver une deuxième méthode pour valider si le poids a une influence sur l'espérance de vie afin d'obtenir des résultats plus certains.
+                                                                                                                                                                               
+                                                                                                                                                                               #Test d'hypothèse
+                                                                                                                                                                               
+                                                                                                                                                                               Afin de déterminer s'il y a une dépendance entre l'intelligence et la difficulté d'entrainement, nous procédons à un test d'hypothèse. Nous utiliserons un niveau de signification de 0,05.
+                                                                                                                                                                               
+                                                                                                                                                                               Hypothèse nulle: Les moyennes de difficulté d'entrainement sont égales et il n'y a donc pas de lien entre cette dernière et l'intelligence.
+
+Hypothèse alternative: Au moins une des moyennes diffère et il y a donc un lien entre l'intelligence et la difficulté d'entrainement.
+`
+```{r}
+observed_f_statistic <- Dog_data %>%
+  specify(Training_Difficulty ~ Intelligence_Rating_category) %>%
+  hypothesize(null = "independence") %>%
+  calculate(stat = "F")
+```
+
+
+```{r}
+null_dist_anova <- Dog_data %>%
+  specify(Training_Difficulty ~ Intelligence_Rating_category) %>%
+  hypothesize(null = "independence") %>%
+  generate(reps = 1000, type = "permute") %>%
+  calculate(stat = "F")
+
+null_dist_anova %>%
+  visualize() + 
+  shade_p_value(observed_f_statistic,
+                direction = "greater")
+
+p_value <- null_dist_anova %>%
+  get_p_value(obs_stat = observed_f_statistic,
+              direction = "greater")
+
+p_value
+
+```
+
+Nous obtenons finalement une valeur p de 0,004, ce qui est plus petit que 0,05. Cela signifie que nous devons rejeter l'hypothèse nulle. On constate alors qu'au moins une des moyennes diffère. Par conséquent, il y a effectivement un lien entre l'intelligence et la difficulté d'entrainement.
+
+Lors de l'adoption de son toutou, une personne devrait donc considérer à quel point elle veut entrainer celui-ci. Si elle souhaite en faire, par exemple, un chien de compétition, il serait préférable d'opter pour un ayant un niveau d'intelligence plus élevé afin de faciliter son entrainement et de gagner du temps. Toutefois, si cette personne a beaucoup de patience et de temps, elle peut toujours en adopter un avec un niveau moins élevé. Il est aussi important de considérer que si elle ne planifie pas l'entrainer du tout, alors l'intelligence n'aura pas une grande importance et elle pourra se fier à d'autres critères avant de procéder.
+                                                                                                                                                                               
+                                                                                                                                                                               #Conclusion
+                                                                                                                                                                               
+                                                                                                                                                                               Pour conclure, l'analyse ci-haut faite à partir des données sur les races de chien nous a permis de classer leurs différentes caractéristiques et de les mettre en relation pour faciliter le choix des familles voulant adopter un compagnon canin. Avec les différents tableaux et graphiques, il est possible de comprendre visuellement la corrélation entre les variables (les caractéristiques des chiens) et de s'orienter vers une race plutôt qu'une autre en fonction des besoins quotidiens autant des chiens que de leurs futurs maîtres. Nous avons pu déterminer quel était le meilleur type de chien en fonction des besoins de toilettage et d'exercice, quelle race était la meilleure pour les familles avec des enfants, démontrer qu'il y avait un lien entre l'espérance de vie et le poids, ainsi qu'entre le niveau d'intelligence et la difficulté d'entrainement. Ce qui est bien de cette analyse avec les logiciel R, c'est qu'on peut l'ajuster à tout moment pour donner lieu à des analyses qui seraient utiles pour chacun dans leur processus décisionnel.
