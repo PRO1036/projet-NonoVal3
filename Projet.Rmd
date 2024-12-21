@@ -7,9 +7,9 @@ Noémie Vallée
 
 #Introduction
 
-La question de recherche de ce projet est la suivante : Quelles sont les caractéristiques les plus importantes des différentes races de chiens et comment ces caractéristiques peuvent affecter l’adaptabilité de l’animal dans certains contextes spécifiques ? L'objectif de cette analyse est d’aider la population à se renseigner quant aux particularités entourant chaque race de chien et à prendre des décisions éclairées lors de l’adoption.
+La question de recherche de ce projet est la suivante : Quelles sont les caractéristiques les plus importantes des différentes races de chien et comment ces caractéristiques peuvent-elles affecter l’adaptabilité de l’animal dans certains contextes spécifiques ? L'objectif de cette analyse est d’aider la population à se renseigner quant aux particularités entourant chaque race de chien et à prendre des décisions éclairées lors de l’adoption.
 
-Pour l’analyse de nos données, on souhaite établir la relation entre les différentes caractéristiques des races, par exemple, la taille et l'intelligence, mais aussi catégoriser ces races afin de déterminer laquelle est la meilleure pour telle personne selon son mode de vie et préférences. Nous jugeons que les chiens ayant besoin de plus d'exercice et qui requièrent plus de soins devraient avoir un propriétaire ayant beaucoup de temps pour gérer tout cela. Nous allons donc déterminer quels sont les types qui ont besoin de ce temps. De plus, on s'attend à ce que les chiens ayant un indice amical plus élevé soient meilleurs avec les enfants, ce qui conviendrait aux familles. On pose aussi comme hypothèse que les chiens ayant une plus grande taille ont une espérance de vie moins élevée, une information que les gens devraient savoir. Finalement, on croit qu'il y a une dépendance entre le niveau d'intelligence du chien et la difficulté à l'entrainer.
+Pour l’analyse de nos données, nous voulons établir la relation entre les différentes caractéristiques des races, par exemple, la taille et l’intelligence, mais aussi les catégoriser afin de déterminer quelle race convient le mieux à telle personne selon son mode de vie et préférences. Nous jugeons que les chiens ayant besoin de plus d'exercice et qui requièrent plus de soins devraient avoir un propriétaire ayant beaucoup de temps pour gérer tout cela. Nous allons donc déterminer quels sont les types qui ont besoin de ce temps. De plus, on s'attend à ce que les chiens ayant un indice amical plus élevé soient meilleurs avec les enfants, ce qui conviendrait aux familles. On pose aussi comme hypothèse que les chiens ayant une plus grande taille ont une espérance de vie moins élevée, une information que les gens devraient savoir. Finalement, on croit qu'il y a une dépendance entre le niveau d'intelligence du chien et la difficulté à l'entrainer.
 
 #Présentation des données
 
@@ -18,6 +18,7 @@ Pour ce faire, nous utiliserons le dataset "Dog_Breads_Around_The_World" que nou
 #Chargement des packages
 
 Pour ce projet, nous aurons besoin des packages tidyverse, tidymodels, infer et broom.
+
 ```{r}
 
 library(tidyverse)
@@ -70,9 +71,9 @@ Maintenant que les variables sont renommées, on peut créer des sous-catégorie
 
 Ainsi, nous allons diviser le Life_Span (la durée de vie) en trois catégories. 
 
-Si la durée de vie est plus petite (<) que 10 ans, on la définie comme "courte". 
-Si elle est plus grande ou égale (>=) à 10 et plus petite ou égale (<=) à 13, alors entre 10 et 13 ans inclusivement, on la définie comme "moyenne". 
-Si elle est plus grande (>) que 13, on la définie comme "longue".
+Si la durée de vie est plus petite (<) que 10 ans, on la définit comme "courte". 
+Si elle est plus grande ou égale (>=) à 10 et plus petite ou égale (<=) à 13, alors entre 10 et 13 ans inclusivement, on la définit comme "moyenne". 
+Si elle est plus grande (>) que 13, on la définit comme "longue".
 
 ```{r}
 
@@ -97,8 +98,8 @@ Dog_data <- Dog_data%>%
 Pour le Daily_Exercise_Needs (le besoin en activité physique quotidien), on le divise en trois catégories. 
 
 Si le chien a besoin d'une heure ou moins (<=) d'activité physique par jour, on dit que son besoin est "low".
-Si le chien à besoin de plus (>) d'une heure jusqu'à (<=) deux heures d'activité physique par jour, on dit que son besoin est "moderate".
-Si le chien à besoin de plus de (>) deux heures d'activité physique par jour, on dit que son besoin est "high".
+Si le chien a besoin de plus (>) d'une heure jusqu'à (<=) deux heures d'activité physique par jour, on dit que son besoin est "moderate".
+Si le chien a besoin de plus de (>) deux heures d'activité physique par jour, on dit que son besoin est "high".
 
 ```{r}
 
@@ -109,9 +110,9 @@ Dog_data <- Dog_data %>%
 
 Pour le Intelligence_Rating (l'indice d'intelligence), on le divise en trois catégories.
 
-Si, sur l'échelle de 10, son indice d'intelligence est plus petite ou égale (<=) à 6, on dit que son indice est "low".
+Si, sur l'échelle de 10, son indice d'intelligence est plus petit ou égal (<=) à 6, on dit que son indice est "low".
 Si, sur l'échelle de 10, son indice d'intelligence est entre 7 et 8 inclusivement, on dit que son indice est "moderate".
-Si, sur l'échelle de 10, son indice d'intelligence est plus grande ou égale (>=) à 9, on dit que son indice est "high".
+Si, sur l'échelle de 10, son indice d'intelligence est plus grand ou égal (>=) à 9, on dit que son indice est "high".
 
 ```{r}
 
@@ -122,7 +123,7 @@ Dog_data <- Dog_data %>%
 
 #Quels types de chien requièrent plus de temps?
 
-Afin de déterminer quels types de chien requièrent plus de temps, nous allons créer un graphique en bar dans lequel nous incluerons les variables "Grooming_Needs", "Daily_Exercise_Needs_category", "Size" et "Type". Afin de visualiser le tout, nous utiliserons un facet_wrap.
+Afin de déterminer quels types de chien requièrent plus de temps, nous allons créer un graphique en barre dans lequel nous inclurons les variables "Grooming_Needs", "Daily_Exercise_Needs_category", "Size" et "Type". Afin de visualiser le tout, nous utiliserons un facet_wrap.
 
 
 ```{r}
@@ -131,7 +132,8 @@ ggplot(data = Dog_data, mapping = aes(x = Daily_Exercise_Needs_category, y = Gro
   labs(title = "Besoins en exercice et toilettage selon la taille et le type de chien", x = "Besoin en exercice", y = "Besoin en toilettage")
 
 ```
-En observant notre visualisation, on remarque que les chiens de troupeaux ont généralement besoin de beaucoup de toilettage et d'exercice en grande quantité. Les chiens de chasse, eux, ont besoin d'être peu toilettés à modérément, tout comme leur quantité d'exercice. Pour ce qui est des chiens non-sportifs, terrier et standards, leur temps de toilettage varie énormément et ils ont besoin d'exercice en quantité faible à modérée, mais surtout modérée pour ceux de type standard et terrier. Quant aux chiens sportifs, ils ont généralement besoin d'une grande quantité de toilettage et une quantité modérée à élevée d'exercice. Le besoin en toilettage des "toy dogs" varie aussi beaucoup, mais ils ont besoin de peu d'exercice. Finalement, les chiens de travail ont besoin d'un temps d'exercice généralement modéré et d'une quantité de soins faible à élevée.
+
+En observant notre visualisation, on remarque que les chiens de troupeaux ont généralement besoin de beaucoup de toilettage et d'exercice en grande quantité. Les chiens de chasse, eux, ont besoin d'être peu toilettés à modérément, tout comme leur quantité d'exercice. Pour ce qui est des chiens non sportifs, terrier et standards, leur temps de toilettage varie énormément et ils ont besoin d'exercice en quantité faible à modérée, mais surtout modérée pour ceux de type standard et terrier. Quant aux chiens sportifs, ils ont généralement besoin d'une grande quantité de toilettage et une quantité modérée à élevée d'exercice. Le besoin en toilettage des "toy dogs" varie aussi beaucoup, mais ils ont besoin de peu d'exercice. Finalement, les chiens de travail ont besoin d'un temps d'exercice généralement modéré et d'une quantité de soins faible à élevée.
 
 On constate donc que les chiens de troupeaux sont souvent ceux qui demandent le plus de temps. On recommanderait donc ces types de toutou à ceux qui ont beaucoup de temps sur les épaules et qui travaillent potentiellement depuis leur chez-soi. Les "toy dogs" semblent être ceux qui ont besoin de moins de temps, donc pour quelqu'un qui manque de temps, mais qui souhaite avoir un compagnon fidèle, il pourrait opter pour l'une de ces races. Bien évidemment, il faut quand même avoir un minimum de temps à leur consacrer puisqu'ils ont quand même certains besoins.
 
@@ -161,7 +163,7 @@ Dog_data %>%
 
 ```
 
-Des parents avec des jeunes enfants ou qui aiment être en contact avec des familles devraient se tourner vers ces races de chiens. Les plus haut classés ont les meilleurs caractéristiques. Nous avons mis 30 choix pour laisser la chance aux gens de se baser également sur leurs autres goûts personnels. C'est pourquoi nous avons ajouté une caractéristique unique de chaque race dans cette liste.
+Des parents avec des jeunes enfants ou qui aiment être en contact avec des familles devraient se tourner vers ces races de chiens. Les plus haut classés ont les meilleures caractéristiques. Nous avons mis 30 choix pour laisser la chance aux gens de se baser également sur leurs autres goûts personnels. C'est pourquoi nous avons ajouté une caractéristique unique de chaque race dans cette liste.
 
 #Régression
 
@@ -217,7 +219,7 @@ print(model_summary)
 ```
 Source : https://modelsummary.com/
 
-Ici, on peut déduire que l'équation de la pente est y = -0,075x + 13.68. Maintenant, il est simple et facile lorsqu'on connait le poid d'estimer l'espérance de vie. Assez pratique quand les chiens ont atteint leur poids stable. Par exemple, un chien de 1 kg aurait une espérance de vie d'environ 13,068 ans.
+Ici, on peut déduire que l'équation de la pente est y = -0,075x + 13.68. Maintenant, il est simple et facile lorsqu'on connait le poids d'estimer l'espérance de vie. Assez pratique quand les chiens ont atteint leur poids stable. Par exemple, un chien de 1 kg aurait une espérance de vie d'environ 13,068 ans.
 
 Calculons le R carré pour se prononcer sur la précision de la régression.
 ```{r}
@@ -227,7 +229,7 @@ print(model_metrics)
 
 ```
 
-Le R carré ici est de 0,59. Comme un cherche un coefficient R^2 qui se rapproche le plus possible de 1, on considère que la relation proportionnelle entre les deux variables (le poids et l'espérance de vie) ne suit pas le sens des proportionnalités dans certains cas. On pourrait dire que dans 59% des cas, les deux variables sont proportionnelles et qu'elle ne le sont pas dans 41% des cas. Il serait donc bien de trouver une deuxième méthode pour valider si le poids a une influence sur l'espérance de vie afin d'obtenir des résultats plus certains.
+Le R carré ici est de 0,59. Comme un cherche un coefficient R^2 qui se rapproche le plus possible de 1, on considère que la relation proportionnelle entre les deux variables (le poids et l'espérance de vie) ne suit pas le sens des proportionnalités dans certains cas. On pourrait dire que dans 59% des cas, les deux variables sont proportionnelles et qu'elles ne le sont pas dans 41% des cas. Il serait donc bien de trouver une deuxième méthode pour valider si le poids a une influence sur l'espérance de vie afin d'obtenir des résultats plus certains.
 
 #Test d'hypothèse
 
